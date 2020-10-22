@@ -1,21 +1,22 @@
 import { Request, Response } from 'express'
 import { getRepository } from 'typeorm'
 import User from '../models/User'
-import UserService from '../services/UserService'
 
 class UserController {
   async store(req: Request, res: Response) {
     const repository = getRepository(User)
-    
-    const { username } = req.body
 
-    const userExists = await UserService.findOneByUsername(username)
+    const { username, password } = req.body
+
+    const userExists = await repository.findOne({ where: { username } })
 
     if (userExists) {
-      return res.status(409).json({ message: 'User not found!' })
+      return res.status(409).json({ message: 'User already exists!' })
     }
 
-    const user = await repository.save(req.body)
+    const user = repository.create({ username, password })
+    
+    await repository.save(req.body)
 
     return res.json(user)
   }
